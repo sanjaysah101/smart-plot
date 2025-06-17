@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
 
 from src.ai_utils import get_data_insights
 
@@ -12,12 +11,9 @@ from src.db_utils import (
     get_dataset,
     get_dataset_names,
     store_dataset,
-    vector_search, # Added import
+    vector_search,  # Added import
 )
 from src.kaggle_utils import download_dataset, search_datasets
-
-# Load environment variables
-load_dotenv()
 
 # Page configuration
 PAGE_CONFIG = {
@@ -59,7 +55,7 @@ def sidebar():
 
         # Handle different data sources
         if data_source == "Upload File":
-            handle_uploaded_file() # Changed from handle_file_upload()
+            handle_uploaded_file()  # Changed from handle_file_upload()
         elif data_source == "Kaggle Dataset":
             handle_kaggle_dataset()
         elif data_source == "MongoDB Storage":
@@ -127,9 +123,11 @@ def show_data_options():
 
 def handle_uploaded_file():
     """Handle uploaded file data source"""
-    allowedExtension = ["csv", "xlsx"] # Added from old handle_file_upload
+    allowedExtension = ["csv", "xlsx"]  # Added from old handle_file_upload
     uploaded_file = st.sidebar.file_uploader(
-        "Upload a CSV or Excel file", type=allowedExtension, key="file_uploader" # Use allowedExtension
+        "Upload a CSV or Excel file",
+        type=allowedExtension,
+        key="file_uploader",  # Use allowedExtension
     )
     if uploaded_file is not None:
         # Logic from old handle_file_upload to read file and set initial session state
@@ -152,53 +150,84 @@ def handle_uploaded_file():
 
                 # Ask user which column to use for text embedding, or to combine columns
                 st.sidebar.subheader("Configure Text for Embedding")
-                embedding_text_column_options = ["None (Skip Embedding)"] + st.session_state.columnList + ["Combine multiple columns"]
-                
-                selected_embedding_source = st.sidebar.selectbox(
-                    "Select column for text embedding (or combine)", 
-                    embedding_text_column_options, 
-                    key="embedding_source_select"
+                embedding_text_column_options = (
+                    ["None (Skip Embedding)"]
+                    + st.session_state.columnList
+                    + ["Combine multiple columns"]
                 )
-                
+
+                selected_embedding_source = st.sidebar.selectbox(
+                    "Select column for text embedding (or combine)",
+                    embedding_text_column_options,
+                    key="embedding_source_select",
+                )
+
                 combined_text_column_name = "combined_text_for_embedding"
-                text_column_for_embedding = None # Initialize
+                text_column_for_embedding = None  # Initialize
 
                 if selected_embedding_source == "Combine multiple columns":
                     columns_to_combine = st.sidebar.multiselect(
-                        "Select columns to combine for embedding", 
+                        "Select columns to combine for embedding",
                         st.session_state.columnList,
-                        key="columns_to_combine_multiselect"
+                        key="columns_to_combine_multiselect",
                     )
                     if columns_to_combine:
-                        df[combined_text_column_name] = df[columns_to_combine].astype(str).agg(' '.join, axis=1)
+                        df[combined_text_column_name] = (
+                            df[columns_to_combine].astype(str).agg(" ".join, axis=1)
+                        )
                         text_column_for_embedding = combined_text_column_name
-                        st.session_state.last_embedded_text_column = combined_text_column_name # Store for later default
-                        st.sidebar.info(f"Using combined column '{combined_text_column_name}' for embeddings.")
+                        st.session_state.last_embedded_text_column = (
+                            combined_text_column_name  # Store for later default
+                        )
+                        st.sidebar.info(
+                            f"Using combined column '{combined_text_column_name}' for embeddings."
+                        )
                     else:
-                        st.sidebar.warning("Please select columns to combine or choose a single column.")
+                        st.sidebar.warning(
+                            "Please select columns to combine or choose a single column."
+                        )
                         text_column_for_embedding = None
                 elif selected_embedding_source != "None (Skip Embedding)":
                     text_column_for_embedding = selected_embedding_source
-                    st.session_state.last_embedded_text_column = text_column_for_embedding # Store for later default
-                    st.sidebar.info(f"Using column '{text_column_for_embedding}' for embeddings.")
+                    st.session_state.last_embedded_text_column = (
+                        text_column_for_embedding  # Store for later default
+                    )
+                    st.sidebar.info(
+                        f"Using column '{text_column_for_embedding}' for embeddings."
+                    )
                 else:
                     text_column_for_embedding = None
                     st.sidebar.info("Skipping text embedding.")
 
                 # Option to save to MongoDB
                 if st.sidebar.button("Save to MongoDB", key="save_to_mongodb_btn"):
-                    num_records = store_dataset(filename, df, text_column_for_embedding=text_column_for_embedding)
-                    embedding_msg = "Embeddings generated." if text_column_for_embedding else "No embeddings generated."
+                    num_records = store_dataset(
+                        filename,
+                        df,
+                        text_column_for_embedding=text_column_for_embedding,
+                    )
+                    embedding_msg = (
+                        "Embeddings generated."
+                        if text_column_for_embedding
+                        else "No embeddings generated."
+                    )
                     st.sidebar.success(
                         f"Dataset saved to MongoDB with {num_records} records. {embedding_msg}"
                     )
                     if text_column_for_embedding:
-                        st.sidebar.markdown("**Important:** For vector search to work, ensure you have a **vector search index** named `vector_index` on the `embedding` field in your MongoDB Atlas collection. Refer to the `create_vector_index` logs or Atlas documentation for setup details.")
-                    
+                        st.sidebar.markdown(
+                            "**Important:** For vector search to work, ensure you have a **vector search index** named `vector_index` on the `embedding` field in your MongoDB Atlas collection. Refer to the `create_vector_index` logs or Atlas documentation for setup details."
+                        )
+
                     # If combined column was created and we don't want to persist it in the displayed df
-                    if text_column_for_embedding == combined_text_column_name and combined_text_column_name in df.columns:
+                    if (
+                        text_column_for_embedding == combined_text_column_name
+                        and combined_text_column_name in df.columns
+                    ):
                         df.drop(columns=[combined_text_column_name], inplace=True)
-                        st.session_state.columnList = df.columns.values.tolist() # Update column list if temp col dropped
+                        st.session_state.columnList = (
+                            df.columns.values.tolist()
+                        )  # Update column list if temp col dropped
             except Exception as e:
                 st.sidebar.error(f"Error processing file: {e}")
         else:
@@ -260,47 +289,84 @@ def handle_kaggle_dataset():
                         st.session_state.filename = filename.split(".")[0]
                         st.session_state.columnList = df.columns.values.tolist()
                         st.session_state.data_loaded = True
-                        
+
                         # Ask user which column to use for text embedding
                         st.sidebar.subheader("Configure Text for Embedding (Kaggle)")
-                        embedding_text_column_options_kaggle = ["None (Skip Embedding)"] + st.session_state.columnList + ["Combine multiple columns"]
-                        selected_embedding_source_kaggle = st.sidebar.selectbox(
-                            "Select column for text embedding (or combine)", 
-                            embedding_text_column_options_kaggle, 
-                            key="embedding_source_select_kaggle"
+                        embedding_text_column_options_kaggle = (
+                            ["None (Skip Embedding)"]
+                            + st.session_state.columnList
+                            + ["Combine multiple columns"]
                         )
-                        
-                        combined_text_column_name_kaggle = "combined_text_for_embedding_kaggle"
+                        selected_embedding_source_kaggle = st.sidebar.selectbox(
+                            "Select column for text embedding (or combine)",
+                            embedding_text_column_options_kaggle,
+                            key="embedding_source_select_kaggle",
+                        )
+
+                        combined_text_column_name_kaggle = (
+                            "combined_text_for_embedding_kaggle"
+                        )
                         text_column_for_embedding_kaggle = None
 
-                        if selected_embedding_source_kaggle == "Combine multiple columns":
+                        if (
+                            selected_embedding_source_kaggle
+                            == "Combine multiple columns"
+                        ):
                             columns_to_combine_kaggle = st.sidebar.multiselect(
-                                "Select columns to combine for embedding", 
+                                "Select columns to combine for embedding",
                                 st.session_state.columnList,
-                                key="columns_to_combine_multiselect_kaggle"
+                                key="columns_to_combine_multiselect_kaggle",
                             )
                             if columns_to_combine_kaggle:
-                                df[combined_text_column_name_kaggle] = df[columns_to_combine_kaggle].astype(str).agg(' '.join, axis=1)
-                                text_column_for_embedding_kaggle = combined_text_column_name_kaggle
-                                st.sidebar.info(f"Using combined column '{combined_text_column_name_kaggle}' for embeddings.")
+                                df[combined_text_column_name_kaggle] = (
+                                    df[columns_to_combine_kaggle]
+                                    .astype(str)
+                                    .agg(" ".join, axis=1)
+                                )
+                                text_column_for_embedding_kaggle = (
+                                    combined_text_column_name_kaggle
+                                )
+                                st.sidebar.info(
+                                    f"Using combined column '{combined_text_column_name_kaggle}' for embeddings."
+                                )
                             else:
-                                st.sidebar.warning("Please select columns to combine or choose a single column.")
-                        elif selected_embedding_source_kaggle != "None (Skip Embedding)":
-                            text_column_for_embedding_kaggle = selected_embedding_source_kaggle
-                            st.sidebar.info(f"Using column '{text_column_for_embedding_kaggle}' for embeddings.")
+                                st.sidebar.warning(
+                                    "Please select columns to combine or choose a single column."
+                                )
+                        elif (
+                            selected_embedding_source_kaggle != "None (Skip Embedding)"
+                        ):
+                            text_column_for_embedding_kaggle = (
+                                selected_embedding_source_kaggle
+                            )
+                            st.sidebar.info(
+                                f"Using column '{text_column_for_embedding_kaggle}' for embeddings."
+                            )
                         else:
-                            st.sidebar.info("Skipping text embedding for Kaggle dataset.")
+                            st.sidebar.info(
+                                "Skipping text embedding for Kaggle dataset."
+                            )
 
                         # Option to save to MongoDB
-                        num_records = store_dataset(st.session_state.filename, df, text_column_for_embedding=text_column_for_embedding_kaggle)
+                        num_records = store_dataset(
+                            st.session_state.filename,
+                            df,
+                            text_column_for_embedding=text_column_for_embedding_kaggle,
+                        )
                         st.sidebar.success(
                             f"Dataset loaded and {num_records} records stored in MongoDB. "
-                            f"{ 'Embeddings generated.' if text_column_for_embedding_kaggle else 'No embeddings generated.' }"
+                            f"{'Embeddings generated.' if text_column_for_embedding_kaggle else 'No embeddings generated.'}"
                         )
                         # If combined column was created and we don't want to persist it in the displayed df
-                        if text_column_for_embedding_kaggle == combined_text_column_name_kaggle and combined_text_column_name_kaggle in df.columns:
-                             df.drop(columns=[combined_text_column_name_kaggle], inplace=True)
-                             st.session_state.columnList = df.columns.values.tolist()
+                        if (
+                            text_column_for_embedding_kaggle
+                            == combined_text_column_name_kaggle
+                            and combined_text_column_name_kaggle in df.columns
+                        ):
+                            df.drop(
+                                columns=[combined_text_column_name_kaggle], inplace=True
+                            )
+                            st.session_state.columnList = df.columns.values.tolist()
                     else:
                         st.sidebar.error("No CSV files found in the dataset")
                 except Exception as e:
@@ -433,7 +499,9 @@ def mainContent():
         return
 
     # Display tabs for different sections
-    tab1, tab2, tab3, tab4 = st.tabs(["Data Explorer", "Visualization", "AI Insights", "Vector Search"]) # Added Vector Search Tab
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["Data Explorer", "Visualization", "AI Insights", "Vector Search"]
+    )  # Added Vector Search Tab
 
     with tab1:
         st.header("Data Explorer")
@@ -573,76 +641,111 @@ def mainContent():
     with tab3:
         generate_ai_insights()
 
-
-    with tab4: # New Tab for Vector Search
+    with tab4:  # New Tab for Vector Search
         st.header("Semantic Search with AI Embeddings")
 
-        if not st.session_state.data_loaded or st.session_state.df is None or st.session_state.filename is None:
-            st.info("Please load a dataset and ensure it has been stored in MongoDB with embeddings to use vector search.")
+        if (
+            not st.session_state.data_loaded
+            or st.session_state.df is None
+            or st.session_state.filename is None
+        ):
+            st.info(
+                "Please load a dataset and ensure it has been stored in MongoDB with embeddings to use vector search."
+            )
             return
 
         # Input for search query
-        search_query = st.text_input("Enter your search query:", key="vector_search_query")
-        
+        search_query = st.text_input(
+            "Enter your search query:", key="vector_search_query"
+        )
+
         # Select which field's text content to return alongside the search results
         # This assumes that the original text field used for embedding (or another relevant text field) is known
         # and present in the stored documents.
         # For simplicity, let's allow choosing from existing columns, though the actual embedded text might be a combination.
         # This part might need refinement based on how text_column_for_embedding was handled during store_dataset.
-        
+
         # Try to guess the original text column if it was a single column, or default
         # This is a heuristic. A more robust way would be to store metadata about the embedded field.
         default_text_field = st.session_state.get("last_embedded_text_column", None)
         if default_text_field and default_text_field not in st.session_state.columnList:
-            default_text_field = None # Reset if not in current columns (e.g. combined temp column)
+            default_text_field = (
+                None  # Reset if not in current columns (e.g. combined temp column)
+            )
         if not default_text_field and st.session_state.columnList:
-             # Heuristic: pick the first string-like column if available, or just the first column
-            first_str_col = next((col for col in st.session_state.columnList if st.session_state.df[col].dtype == 'object'), None)
-            default_text_field = first_str_col if first_str_col else st.session_state.columnList[0]
+            # Heuristic: pick the first string-like column if available, or just the first column
+            first_str_col = next(
+                (
+                    col
+                    for col in st.session_state.columnList
+                    if st.session_state.df[col].dtype == "object"
+                ),
+                None,
+            )
+            default_text_field = (
+                first_str_col if first_str_col else st.session_state.columnList[0]
+            )
 
-        available_fields_for_return = [col for col in st.session_state.columnList if col != 'embedding'] # Exclude embedding itself
-        
+        available_fields_for_return = [
+            col for col in st.session_state.columnList if col != "embedding"
+        ]  # Exclude embedding itself
+
         text_field_to_return = None
         if available_fields_for_return:
             text_field_to_return = st.selectbox(
-                "Select a text field to display from search results (optional):", 
+                "Select a text field to display from search results (optional):",
                 options=["None (Show only score)"] + available_fields_for_return,
-                index= (available_fields_for_return.index(default_text_field) + 1) if default_text_field and default_text_field in available_fields_for_return else 0,
-                key="vector_search_return_field"
+                index=(available_fields_for_return.index(default_text_field) + 1)
+                if default_text_field
+                and default_text_field in available_fields_for_return
+                else 0,
+                key="vector_search_return_field",
             )
             if text_field_to_return == "None (Show only score)":
                 text_field_to_return = None
         else:
-            st.info("No suitable text fields available in the current dataset to display with search results.")
+            st.info(
+                "No suitable text fields available in the current dataset to display with search results."
+            )
 
-        num_results = st.slider("Number of results to retrieve:", min_value=1, max_value=20, value=5, key="vector_search_num_results")
+        num_results = st.slider(
+            "Number of results to retrieve:",
+            min_value=1,
+            max_value=20,
+            value=5,
+            key="vector_search_num_results",
+        )
 
         if st.button("Search", key="vector_search_button"):
             if not search_query:
                 st.warning("Please enter a search query.")
                 return
-            
+
             with st.spinner("Performing vector search..."):
                 try:
                     # Assuming 'embedding' is the field where vectors are stored
                     # And 'vector_index' is the name of the search index in Atlas
                     search_results_df = vector_search(
-                        st.session_state.filename, 
-                        search_query, 
-                        index_field="embedding", 
+                        st.session_state.filename,
+                        search_query,
+                        index_field="embedding",
                         num_results=num_results,
-                        text_field_to_return=text_field_to_return
+                        text_field_to_return=text_field_to_return,
                     )
 
                     if not search_results_df.empty:
                         st.subheader("Search Results")
                         st.dataframe(search_results_df)
                     else:
-                        st.info("No results found, or an error occurred during the search. "
-                                "Ensure the dataset was stored with embeddings and the vector index is configured in MongoDB Atlas.")
+                        st.info(
+                            "No results found, or an error occurred during the search. "
+                            "Ensure the dataset was stored with embeddings and the vector index is configured in MongoDB Atlas."
+                        )
                 except Exception as e:
                     st.error(f"Error during vector search: {e}")
-                    st.error("Please ensure your MongoDB Atlas instance is configured for vector search and the index 'vector_index' exists.")
+                    st.error(
+                        "Please ensure your MongoDB Atlas instance is configured for vector search and the index 'vector_index' exists."
+                    )
 
 
 if __name__ == "__main__":

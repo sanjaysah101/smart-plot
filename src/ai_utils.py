@@ -1,13 +1,8 @@
-import os
-
 import google.generativeai as genai
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+import streamlit as st
 
 # Get Google API key from environment variables
-GOOGLE_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
+GOOGLE_API_KEY = st.secrets["GOOGLE_CLOUD_API_KEY"]
 
 # Configure the Gemini API
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -71,7 +66,7 @@ def generate_text_embedding(text_to_embed):
         # The size of the zero vector should match the embedding dimension.
         # For 'models/text-embedding-004', the dimension is 768.
         # Alternatively, raise an error or handle as appropriate.
-        return [0.0] * 768 # Or None, depending on how you want to handle it downstream
+        return [0.0] * 768  # Or None, depending on how you want to handle it downstream
 
     try:
         # Using a specific model for embeddings, e.g., 'models/text-embedding-004'
@@ -79,10 +74,10 @@ def generate_text_embedding(text_to_embed):
         result = genai.embed_content(
             model="models/text-embedding-004",
             content=text_to_embed,
-            task_type="RETRIEVAL_DOCUMENT" # or RETRIEVAL_QUERY, SEMANTIC_SIMILARITY etc.
+            task_type="RETRIEVAL_DOCUMENT",  # or RETRIEVAL_QUERY, SEMANTIC_SIMILARITY etc.
         )
-        return result['embedding']
+        return result["embedding"]
     except Exception as e:
         print(f"Error generating embedding: {e}")
         # Return a zero vector or None in case of an error to avoid breaking the pipeline
-        return [0.0] * 768 # Or None
+        return [0.0] * 768  # Or None

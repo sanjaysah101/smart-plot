@@ -1,10 +1,12 @@
 {
   "cSpell.words": [
-    "dotenv",
     "genai",
     "generativeai",
     "kaggle",
     "levelname",
+    "matplotlib",
+    "numpy",
+    "pymongo",
     "selectbox",
     "Streamlit",
     "Visualisation"
