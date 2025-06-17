@@ -1,0 +1,6 @@
+# requirements.txt
+streamlit
+numpy
+pandas
+matplotlib
+google-generativeai # For Gemini API access
