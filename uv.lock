@@ -186,7 +186,7 @@ wheels = [
 ]
 
 [[package]]
-name = "data-viz-ai"
+name = "smart-plot"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

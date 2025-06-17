@@ -1,6 +1,6 @@
-# Data-viz-ai - AI-Powered Data Visualization Tool
+# Smart Plot  - AI-Powered Data Visualization Tool
 
-Data-viz-ai is an interactive, AI-enhanced data visualization tool built using Streamlit, integrated with Google Cloud AI for automated insight extraction and MongoDB for data storage.
+Smart Plot  is an interactive, AI-enhanced data visualization tool built using Streamlit, integrated with Google Cloud AI for automated insight extraction and MongoDB for data storage.
 
 ## 🚀 Features
 
@@ -24,8 +24,8 @@ Data-viz-ai is an interactive, AI-enhanced data visualization tool built using S
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-repo/data-viz-ai.git
-    cd data-viz-ai
+    git clone https://github.com/sanjaysah101/smart-plot
+    cd smart-plot
     ```
 
 2. **Install dependencies using `uv`:**
