@@ -4,3 +4,7 @@ numpy
 pandas
 matplotlib
 google-generativeai # For Gemini API access
+pymongo # For MongoDB integration
+python-dotenv # For environment variable management
+kaggle # For Kaggle API access
+python-dotenv # For environment variable management

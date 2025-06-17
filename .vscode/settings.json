@@ -3,6 +3,7 @@
     "dotenv",
     "genai",
     "generativeai",
+    "kaggle",
     "levelname",
     "Visualisation"
   ]

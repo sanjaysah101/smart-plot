@@ -28,6 +28,12 @@ To set up and run this project, please follow these steps:
     uv sync
     ```
 
+    or
+
+    ```bash
+    uv add -r .\requirements.txt 
+    ````
+
 ### Configuration
 
 Create a `.env` file in the root directory of the project and add your configuration variables. For example:
