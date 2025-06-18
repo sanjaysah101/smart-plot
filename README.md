@@ -74,7 +74,6 @@ Update values with your MongoDB URI, GCP project ID, and API key.
 
 ## 📌 Notes
 
-- Make sure your GCP API key has permissions to access the required AI services.
 - Sidebar remembers your last state and selection for a seamless workflow.
 - Ensure Kaggle credentials (`~/.kaggle/kaggle.json`) are set up for dataset import.
 
@@ -84,6 +83,6 @@ MIT License. See `LICENSE` file for more details.
 
 ## 🙋‍♀️ Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Just to let you know, pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Happy Visualizing! 🚀
